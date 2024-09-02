@@ -6,6 +6,13 @@ for (var [chatName, chatId] of Object.entries(chatData)) {
     option.textContent = chatName;
     botChatsList.appendChild(option);
 }
+var botQMList = document.getElementById('emojiMenu');
+for (var item of Object.values(quickMessages)) {
+    var qmItem = document.createElement('span');
+    qmItem.classList.add('emoji');
+    qmItem.textContent = item;
+    botQMList.appendChild(qmItem);
+}
 
 // Insert tag at cursor position or wrap selected text
 function insertTag(tag, arg = "") {

@@ -6,3 +6,24 @@
             'Chat name': '-0000000000000',
             // Add more chats as needed
         };
+
+        // custom emoji and messages for quick message menu
+        const quickMessages = [
+            '❤️',
+            '😏',
+            '😎',
+            '🤔',
+            '🥺',
+            '🐈',
+            '🤡',
+            '🫡',
+            '😅',
+            '🙈',
+            '😊',
+            '😀',
+            '😂',
+            '😍',
+            '👍',
+            '🙏',
+            '👉🏻👈🏻',
+        ];
