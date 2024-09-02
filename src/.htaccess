@@ -1,0 +1,13 @@
+# .htaccess
+
+# Включить переписывание URL
+RewriteEngine On
+
+# Убедитесь, что файл index.php существует
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# Убедитесь, что директория не существует
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Перенаправить все запросы к /proxy/ на index.php
+RewriteRule ^proxy/(.*)$ /proxy/index.php [L,QSA]
