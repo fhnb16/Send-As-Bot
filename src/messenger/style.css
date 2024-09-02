@@ -15,6 +15,7 @@ body {
 .btn {
     background-color: #4a5568;
     color: #cbd5e0;
+    min-width: 32pt;
 }
 
 .btn:hover {
@@ -116,4 +117,30 @@ body {
 ::-webkit-scrollbar-track,
  ::-webkit-scrollbar-button {
     display: none;
+}
+
+#emojiMenu.hidden {
+    display: none;
+}
+
+#emojiMenu {
+    max-height: 420px;
+    max-width: 512px;
+    overflow-y: auto;
+    cursor: default;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+#emojiMenu>span.emoji {
+    cursor: pointer;
+    transition: background-color 0.28s;
+    padding: 4px;
+    margin: 4px;
+    border-radius: 8px;
+}
+
+#emojiMenu>span.emoji:hover {
+    background-color: #00000032;
 }

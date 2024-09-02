@@ -8,7 +8,10 @@ for (var [chatName, chatId] of Object.entries(chatData)) {
 }
 
 // Insert tag at cursor position or wrap selected text
-function insertTag(tag) {
+function insertTag(tag, arg = "") {
+    if (arg != "") {
+        arg = " " + arg;
+    }
     var textarea = document.getElementById('editor');
     var start = textarea.selectionStart;
     var end = textarea.selectionEnd;
@@ -19,13 +22,13 @@ function insertTag(tag) {
     var after = text.substring(end);
 
     if (selected) {
-        textarea.value = before + `<${tag}>` + selected + `</${tag}>` + after;
+        textarea.value = before + `<${tag}${arg}>` + selected + `</${tag}>` + after;
     } else {
-        textarea.value = before + `<${tag}></${tag}>` + after;
+        textarea.value = before + `<${tag}${arg}></${tag}>` + after;
     }
 
     textarea.focus();
-    textarea.setSelectionRange(start + tag.length + 2, end + tag.length + 2);
+    textarea.setSelectionRange(start + tag.length + arg.length + 2, end + tag.length + arg.length + 2);
 }
 
 // Send the message to the Telegram API
@@ -152,4 +155,36 @@ function sendImageURL() {
             })
             .catch(error => console.error('Error sending image:', error));
     }
+}
+
+// Показ/скрытие меню с эмодзи
+const emojiToggleBtn = document.getElementById('emojiToggleBtn');
+const emojiMenu = document.getElementById('emojiMenu');
+const textarea = document.getElementById('editor');
+
+emojiToggleBtn.addEventListener('mouseenter', () => {
+    emojiMenu.classList.remove('hidden');
+});
+
+document.addEventListener('click', (e) => {
+    if (!emojiMenu.contains(e.target) && e.target !== emojiToggleBtn) {
+        emojiMenu.classList.add('hidden');
+    }
+});
+
+emojiMenu.addEventListener('click', (e) => {
+    if (e.target.classList.contains('emoji')) {
+        insertAtCursor(textarea, e.target.textContent);
+        emojiMenu.classList.add('hidden');
+    }
+});
+
+function insertAtCursor(textarea, text) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const before = textarea.value.substring(0, start);
+    const after = textarea.value.substring(end, textarea.value.length);
+    textarea.value = before + text + after;
+    textarea.selectionStart = textarea.selectionEnd = start + text.length;
+    textarea.focus();
 }
