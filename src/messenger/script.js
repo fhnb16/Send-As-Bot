@@ -6,6 +6,13 @@ for (var [chatName, chatId] of Object.entries(chatData)) {
     option.textContent = chatName;
     botChatsList.appendChild(option);
 }
+
+botChatsList.addEventListener('change', (event) => {
+    var chatLog = document.getElementById('chatLog');
+    chatLog.innerHTML = ''; // Clear existing messages
+    updateLog();
+});
+
 updateLog();
 var botQMList = document.getElementById('emojiMenu');
 for (var item of Object.values(quickMessages)) {
@@ -14,6 +21,38 @@ for (var item of Object.values(quickMessages)) {
     qmItem.textContent = item;
     botQMList.appendChild(qmItem);
 }
+
+// Получаем элементы модального окна и изображения
+var modal = document.querySelector('#imageModal');
+var modalImg = modal.querySelector('#fullImage');
+var span = modal.querySelector('.close');
+var chatLog = document.querySelector('#chatLog');
+
+// Добавление обработчика клика для всех миниатюр с классом 'chat-log__message--thumb'
+// Добавим обработчик события click к родительскому элементу
+chatLog.addEventListener('click', (event) => {
+    // Проверяем, является ли кликнутый элемент img с нужным классом
+    if (event.target.classList.contains('chat-log__message--thumb')) {
+        // Здесь выполняется код, который должен выполняться при клике на картинку
+        var clickedImage = event.target;
+        // Отображение модального окна
+        modal.style.display = 'flex';
+        // Установка пути к изображению в полноразмерное окно
+        modalImg.src = clickedImage.src;
+    }
+});
+
+// Закрытие модального окна при клике на крестик
+span.onclick = function() {
+    modal.style.display = 'none';
+};
+
+// Закрытие модального окна при клике вне изображения
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+};
 
 // Insert tag at cursor position or wrap selected text
 function insertTag(tag, arg = "") {
@@ -92,7 +131,7 @@ function deleteMessage() {
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            console.log('Message deleted:', data);
+            //console.log('Message deleted:', data);
             displayResponse(data);
         })
         .catch(error => console.error('Error deleting message:', error));
@@ -172,7 +211,7 @@ var emojiToggleBtn = document.getElementById('emojiToggleBtn');
 var emojiMenu = document.getElementById('emojiMenu');
 var textarea = document.getElementById('editor');
 
-emojiToggleBtn.addEventListener('mouseenter', () => {
+emojiToggleBtn.addEventListener('click', () => {
     emojiMenu.classList.remove('hidden');
 });
 
@@ -208,11 +247,11 @@ async function fetchLastMessages(chatId, botID) {
         var data = await response.json(); // '[' + response.text() + ']'
 
         if (data) {
+            //console.log(data);
             var messages = data
-                .filter(update => (update.result && update.result.chat.id == chatId) || (update.message && update.message.chat.id == chatId))
+                .filter(update => (update.result && update.result.chat && update.result.chat.id == chatId) || (update.message && update.message.chat.id == chatId))
                 .map(update => update.result || update.message)
-                .slice(-20);
-            console.log(data);
+                .slice(-50);
             displayMessages(messages, botID);
         } else {
             console.error('Failed to fetch messages:', data);
@@ -222,7 +261,7 @@ async function fetchLastMessages(chatId, botID) {
     }
 }
 
-function displayMessages(messages, botID) {
+/*function displayMessages(messages, botID) {
     var chatLog = document.getElementById('chatLog');
     chatLog.innerHTML = ''; // Clear existing messages
 
@@ -230,12 +269,33 @@ function displayMessages(messages, botID) {
         printLogMessage(message);
     });
 
-    chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the bottom of the chat log
+    scrollToBottom();
+}*/
+
+function displayMessages(messages, botID) {
+    var chatLog = document.getElementById('chatLog');
+
+    messages.forEach(message => {
+        // Проверяем, есть ли сообщение с таким ID уже в DOM
+        if (!isMessageAlreadyInDOM(message.message_id)) {
+            // Если нет, добавляем его в лог
+            printLogMessage(message);
+        }
+    });
+
+    scrollToBottom();
 }
+
+function isMessageAlreadyInDOM(messageId) {
+    // Проверка наличия элемента с соответствующим message_id
+    return !!document.querySelector(`[data-message-id="${messageId}"]`);
+}
+
+
 
 function printLogMessage(message) {
     var senderName = "user";
-    if (message.from.first_name) {
+    if (message.from && message.from.first_name) {
         senderName = message.from.first_name;
         if (message.from.last_name) {
             senderName += " " + message.from.last_name;
@@ -256,16 +316,150 @@ function printLogMessage(message) {
     senderElement.className = 'chat-log__sender';
     senderElement.textContent = senderName;
 
-    var textElement = document.createElement('div');
-    textElement.textContent = message.text || '[Non-text message]';
+    var innerMessageContainer = document.createElement('div');
+
+    // Отображение текстовых сообщений и вложений
+    if (message.text) {
+        const textElement = document.createElement('div');
+        textElement.className = 'text-message mt-2';
+        textElement.textContent = message.text;
+        innerMessageContainer.appendChild(textElement);
+    } else if (message.caption) {
+        const captionElement = document.createElement('div');
+        captionElement.className = 'caption-message mt-2';
+        captionElement.textContent = message.caption;
+        innerMessageContainer.appendChild(captionElement);
+    }
+
+    // Проверка и отображение вложений с использованием универсальной функции
+    handleAttachment('photo', message, innerMessageContainer, 'photo');
+    handleAttachment('video', message, innerMessageContainer, 'video');
+    handleAttachment('sticker', message, innerMessageContainer, 'sticker');
+    handleAttachment('audio', message, innerMessageContainer, 'audio');
+    handleAttachment('voice', message, innerMessageContainer, 'voice');
+    if (message.animation) {
+        handleAttachment('animation', message, innerMessageContainer, 'gif');
+    } else if (message.document) {
+        handleAttachment('document', message, innerMessageContainer, 'document');
+    }
 
     messageContainer.appendChild(senderElement);
-    messageContainer.appendChild(textElement);
+    messageContainer.appendChild(innerMessageContainer);
+
+
+    messageContainer.dataset.messageId = message.message_id;
 
     chatLog.appendChild(messageContainer);
+
+    // Найдем все изображения в новом сообщении
+    const images = chatLog.querySelectorAll('img');
+
+    if (images.length > 0) {
+        let loadedImages = 0;
+        images.forEach((img) => {
+            img.addEventListener('load', () => {
+                loadedImages++;
+                // Проверяем, загрузились ли все изображения
+                if (loadedImages === images.length) {
+                    scrollToBottom();
+                }
+            });
+        });
+    } else {
+        scrollToBottom(); // Если нет изображений, просто скроллим вниз
+    }
 }
 
 function updateLog() {
     var chatId = botChatsList.value;
     fetchLastMessages(chatId, botID);
+}
+
+// Универсальная функция для отображения вложений
+function handleAttachment(attachmentType, message, container, displayText) {
+    const attachment = message[attachmentType];
+    if (!attachment) return;
+
+    const attachmentDiv = document.createElement('div');
+    attachmentDiv.className = 'attachment mt-2';
+    attachmentDiv.title = "Attachment type: " + attachmentType;
+    attachmentDiv.innerHTML = `<i>Loading ${displayText} preview...</i>`;
+    container.appendChild(attachmentDiv);
+
+    let file_id;
+    if (Array.isArray(attachment)) {
+        file_id = attachment[attachment.length - 1].file_id; // Если массив (например, photo)
+    } else if (attachment.thumbnail) {
+        file_id = attachment.thumbnail.file_id; // Если объект с thumbnail (например, sticker)
+    } else {
+        attachmentDiv.textContent = `[${displayText}]`;
+        return;
+    }
+
+    // Вызов функции insertImagePreview и установка innerHTML
+    insertImagePreview(file_id)
+        .then(imgHtml => {
+            attachmentDiv.innerHTML = imgHtml;
+            attachmentDiv.querySelector('img').addEventListener('load', () => {
+                scrollToBottom();
+            });
+        })
+        .catch(error => {
+            attachmentDiv.textContent = `[${displayText}] (Не удалось загрузить)`;
+            console.error(error);
+        });
+
+
+    scrollToBottom();
+}
+
+
+async function insertImagePreview(file_id) {
+    try {
+        // Первый запрос: получить file_path через getFile API
+        const getFileResponse = await fetch(`${apiEndpoint}getFile?file_id=${file_id}`);
+        const getFileData = await getFileResponse.json();
+
+        if (!getFileData.ok) {
+            throw new Error('Не удалось получить информацию о файле');
+        }
+
+        const file_path = getFileData.result.file_path;
+
+        // Второй запрос: получить файл через прокси
+        const fileResponse = await fetch(`${apiEndpoint}file/${file_path}`);
+        if (!fileResponse.ok) {
+            throw new Error('Не удалось загрузить файл');
+        }
+
+        const blob = await fileResponse.blob();
+
+        // Конвертация Blob в base64
+        const base64Data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result;
+                //console.log(dataUrl);
+                const base64 = dataUrl.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+
+        // Определение MIME типа
+        const mimeType = blob.type;
+
+        // Возвращаем тег img с base64 изображением
+        //console.log(`data: ${mimeType}; base64, ${base64Data}`);
+        return `<img src="data:${mimeType};base64,${base64Data}" alt="Photo" class="w-full rounded chat-log__message--thumb"/>`;
+    } catch (error) {
+        console.error('Ошибка в insertImagePreview:', error);
+        return '[Photo] (Не удалось загрузить)';
+    }
+}
+
+function scrollToBottom() {
+    const chatLog = document.getElementById('chatLog');
+    chatLog.scrollTop = chatLog.scrollHeight;
 }

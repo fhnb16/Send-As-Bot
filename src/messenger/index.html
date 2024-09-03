@@ -18,55 +18,62 @@
 </head>
 
 <body>
-    <header class="flex flex-wrap justify-between items-center p-4 bg-gray-800">
+    <header class="flex flex-wrap justify-between items-center p-4 bg-gray-800 flex-col md:flex-row">
+        <h1 class="text-white text-2xl text-center">Chat Bot Messenger</h1>
+        <select id="botChatsList" class="btn editor__button rounded my-2 md:my-0">
+            <!-- Options will be dynamically added by JavaScript -->
+        </select>
         <div class="flex flex-wrap">
             <a href="https://dev.fhnb.ru" class="btn px-4 py-2 mr-2 rounded text-white text-xl">Home</a>
             <a onclick="updateLog()" href="#" class="btn px-4 py-2 mr-2 rounded text-white text-xl">Update Log</a>
         </div>
-        <h1 class="text-white text-2xl text-center">Chat Bot Messenger</h1>
-        <select id="botChatsList" class="btn editor__button rounded" onchange="updateLog()">
-            <!-- Options will be dynamically added by JavaScript -->
-        </select>
     </header>
 
     <div class="container mx-auto mt-10 p-4">
-        <div id="chatLog" class="chat-log bg-gray-800 rounded shadow-lg mb-4">
-            <!-- Messages will be inserted here -->
-        </div>
-        <div class="editor-container">
-            <div class="mb-4">
-                <button class="btn editor__button mr-2 my-2" id="emojiToggleBtn">❤️</button>
-                <button class="btn editor__button mr-2 mr-2" onclick="insertTag('b')">B</button>
-                <button class="btn editor__button mr-2 mr-2" onclick="insertTag('i')">I</button>
-                <button class="btn editor__button mr-2 mr-2" onclick="insertTag('u')">U</button>
-                <button class="btn editor__button mr-2 mr-2" onclick="insertTag('s')">S</button>
-                <button class="btn editor__button mr-2 mr-2" onclick="insertTag('span', `class='tg-spoiler'`)">Spoiler</button>
-                <button class="btn editor__button mr-2 mr-2" onclick="insertTag('pre')">Pre</button>
-                <button class="btn editor__button mr-2 mr-2" onclick="insertTag('code')">Code</button>
-                <button class="btn editor__button mr-2 mr-2" onclick="insertTag('blockquote')">Quote</button>
-                <button class="btn editor__button mr-2 mr-2" onclick="insertTag('a', `href=''`)">Link</button>
+        <!--  lg:flex md:flex-wrap lg:justify-between items-center flex flex-wrap flex-row justify-center -->
+        <div class="mainSection mb-4">
+            <div id="chatLog" class="chat-log bg-gray-800 rounded shadow-lg mb-4 md:mb-0">
+                <!-- Messages will be inserted here -->
             </div>
-            <div id="emojiMenu" class="hidden absolute z-10 bg-gray-600 rounded-lg p-2 shadow-lg">
-                <!-- Quick Reactions will be inserted here -->
-            </div>
-            <textarea id="editor" class="w-full h-40 p-2 bg-gray-700 text-white rounded" placeholder="Enter your message here..."></textarea>
-            <div class="mt-4 flex justify-between flex-wrap">
-                <div class="inline-flex my-2">
-                    <button class="btn editor__button px-4 py-2 mr-2 rounded" onclick="sendImageB64()">Send Image File</button>
-                    <button class="btn editor__button px-4 py-2 rounded" onclick="sendImageURL()">Send Image URL</button>
+            <div class="editor-container mb-4 md:mb-0">
+                <div id="emojiMenu" class="hidden absolute z-10 bg-gray-600 rounded-lg p-2 shadow-lg">
+                    <!-- Quick Reactions will be inserted here -->
                 </div>
-                <button class="btn editor__button px-4 py-2 rounded my-2" onclick="sendMessage()">Send Message</button>
+                <div class="mb-4">
+                    <button class="btn editor__button mr-2 my-2" id="emojiToggleBtn">❤️</button>
+                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('b')">B</button>
+                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('i')">I</button>
+                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('u')">U</button>
+                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('s')">S</button>
+                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('span', `class='tg-spoiler'`)">Spoiler</button>
+                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('pre')">Pre</button>
+                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('code')">Code</button>
+                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('blockquote')">Quote</button>
+                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('a', `href=''`)">Link</button>
+                </div>
+                <textarea id="editor" class="w-full h-40 p-2 bg-gray-700 text-white rounded" placeholder="Enter your message here..."></textarea>
+                <div class="mt-4 flex justify-between flex-wrap">
+                    <div class="inline-flex my-2">
+                        <button class="btn editor__button px-4 py-2 mr-2 mb-4 rounded" onclick="sendImageB64()">Send Image File</button>
+                        <button class="btn editor__button px-4 py-2 mr-2 mb-4 rounded" onclick="sendImageURL()">Send Image URL</button>
+                    </div>
+                    <button class="btn editor__button px-4 py-2 mr-2 mb-4 rounded" onclick="sendMessage()">Send Message</button>
+                </div>
+                <div id="responseContainer" class="response-container hidden">
+                    <textarea id="responseField" class="w-full h-40 p-2 bg-gray-700 text-white rounded" readonly></textarea>
+                    <button id="deleteMessageBtn" class="btn editor__button mt-4 px-4 py-2 rounded" onclick="deleteMessage()">Delete Message</button>
+                </div>
             </div>
-        </div>
-
-        <div id="responseContainer" class="response-container hidden">
-            <textarea id="responseField" class="w-full h-40 p-2 bg-gray-700 text-white rounded" readonly></textarea>
-            <button id="deleteMessageBtn" class="btn editor__button mt-4 px-4 py-2 rounded" onclick="deleteMessage()">Delete Message</button>
         </div>
     </div>
 
     <input type="file" id="imageFileInput" accept="image/*" class="hidden" onchange="handleImageFile()">
 
+    <!-- Modal window to show image -->
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="fullImage">
+    </div>
 
     <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript" src="script.js"></script>

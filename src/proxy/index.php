@@ -2,7 +2,7 @@
 // proxy index.php
 
 // Отладка
-define('DEBUG', false);
+define('DEBUG', true);
 
 require_once('apiKey.php');
 
@@ -53,17 +53,21 @@ function setJsonLog($data) {
     if (!empty($currentLogs)) {
         $logs = json_decode($currentLogs, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
+            if(DEBUG) file_put_contents('proxy_debug.log', "json error: " . $currentLogs . "\n", FILE_APPEND);
             // Если ошибка в декодировании JSON, инициализируем пустой массив
             $logs = [];
         }
     }
 
     // Добавляем новые данные в массив
-    $logs[] = json_decode($data, false);
-    
-    // Если количество логов превышает 20, удаляем старые
-    if (count($logs) > 40) {
-        $logs = array_slice($logs, -400);
+    $tempLog = json_decode($data, true);
+        if(DEBUG) file_put_contents('proxy_debug.log', "Temp log: " . ($tempLog["result"] != true) . "\n", FILE_APPEND);
+        if(isset($tempLog["ok"]) && is_array($tempLog["result"]) && !isset($tempLog["result"]["file_path"])) {
+            $logs[] = $tempLog;
+        }
+    // Если количество логов превышает 100, удаляем старые
+    if (count($logs) > 120) {
+        $logs = array_slice($logs, 40);
     }
 
     // Кодируем обновленный массив логов обратно в JSON
@@ -82,9 +86,41 @@ $parsedUrl = parse_url($requestUri);
 $path = isset($parsedUrl['path']) ? $parsedUrl['path'] : '';
 $queryString = isset($parsedUrl['query']) ? $parsedUrl['query'] : '';
 
+
 // Преобразование пути из вида /proxy/endpoint в endpoint
 $uriParts = explode('/', trim($path, '/'));
-if (count($uriParts) > 1 && $uriParts[0] === 'proxy') {
+
+// Добавляем новую логику для обработки файлов
+if (count($uriParts) > 1 && $uriParts[1] === 'file') {
+    $file_path = implode('/', array_slice($uriParts, 2));
+    $url = 'https://api.telegram.org/file/' . BOT_API_KEY . '/' . $file_path;
+    // Отладка запроса
+    if(DEBUG) file_put_contents('proxy_debug.log', "Request URI: " . $url . "\n", FILE_APPEND);
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HEADER, false);
+
+    // Получение данных
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($httpCode >= 400) {
+        header("HTTP/1.1 $httpCode Error");
+    }
+
+    // Передача Content-Type из ответа
+    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    header("Content-Type: $contentType");
+
+    curl_close($ch);
+
+    echo $response;
+
+    //return $response;
+}
+
+// Основная логика обработки остальных запросов
+if (count($uriParts) > 1 && $uriParts[0] === 'proxy' && $uriParts[1] !== 'file') {
     $endpoint = implode('/', array_slice($uriParts, 1)); // Получаем endpoint, например, sendMessage
     $fullUri = $endpoint;
 
@@ -117,7 +153,6 @@ if (count($uriParts) > 1 && $uriParts[0] === 'proxy') {
     header("HTTP/1.1 404 Not Found");
     $response = json_encode(['error' => 'Not Found']);
 }
-
 
 // Выводим ответ
 header('Content-Type: application/json');
