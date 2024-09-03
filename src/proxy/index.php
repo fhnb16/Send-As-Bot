@@ -35,7 +35,42 @@ function forwardRequest($requestUri, $requestMethod, $postData = null) {
 
     curl_close($ch);
 
+    setJsonLog($response);
+
     return $response;
+}
+
+function setJsonLog($data) {
+
+    // Имя файла для логов
+    $logFile = CFG_JSON_LOGS;
+    
+    // Получаем текущие логи из файла
+    $currentLogs = file_get_contents($logFile);
+    
+    // Если файл не пустой, декодируем данные из JSON в массив
+    $logs = [];
+    if (!empty($currentLogs)) {
+        $logs = json_decode($currentLogs, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            // Если ошибка в декодировании JSON, инициализируем пустой массив
+            $logs = [];
+        }
+    }
+
+    // Добавляем новые данные в массив
+    $logs[] = json_decode($data, false);
+    
+    // Если количество логов превышает 20, удаляем старые
+    if (count($logs) > 40) {
+        $logs = array_slice($logs, -400);
+    }
+
+    // Кодируем обновленный массив логов обратно в JSON
+    $newLogs = json_encode($logs, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+    // Записываем обновленные логи обратно в файл
+    file_put_contents($logFile, $newLogs);
 }
 
 // Обработка GET и POST запросов

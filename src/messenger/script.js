@@ -209,9 +209,9 @@ async function fetchLastMessages(chatId, botID) {
 
         if (data) {
             var messages = data
-                .filter(update => update.message && update.message.chat.id == chatId)
-                .map(update => update.message)
-                .slice(-10);
+                .filter(update => (update.result && update.result.chat.id == chatId) || (update.message && update.message.chat.id == chatId))
+                .map(update => update.result || update.message)
+                .slice(-20);
             console.log(data);
             displayMessages(messages, botID);
         } else {
@@ -235,14 +235,16 @@ function displayMessages(messages, botID) {
 
 function printLogMessage(message) {
     var senderName = "user";
-    if (message.from.first_name || message.from.last_name) {
-        var senderName = message.from.first_name + " " + message.from.last_name;
-    }
-    if (message.from.username) {
-        var senderName = message.from.username;
+    if (message.from.first_name) {
+        senderName = message.from.first_name;
+        if (message.from.last_name) {
+            senderName += " " + message.from.last_name;
+        }
+    } else if (message.from.username) {
+        senderName = message.from.username;
     }
     if (message.sender_chat && message.sender_chat.title) {
-        var senderName = message.sender_chat.title;
+        senderName = message.sender_chat.title;
     }
     //var senderName = message.sender_chat.title || message.from.first_name + " " + message.from.last_name || message.from.username;
     var isBotMessage = message.from.id == botID;
