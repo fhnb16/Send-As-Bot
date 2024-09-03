@@ -6,6 +6,7 @@ for (var [chatName, chatId] of Object.entries(chatData)) {
     option.textContent = chatName;
     botChatsList.appendChild(option);
 }
+updateLog();
 var botQMList = document.getElementById('emojiMenu');
 for (var item of Object.values(quickMessages)) {
     var qmItem = document.createElement('span');
@@ -70,6 +71,8 @@ function displayResponse(data) {
             deleteBtn.dataset.chatId = data.result.chat.id;
             deleteBtn.classList.remove('hidden');
             textarea.value = "";
+            updateLog();
+            printLogMessage(data.result);
         } else {
             deleteBtn.classList.add('hidden');
         }
@@ -165,9 +168,9 @@ function sendImageURL() {
 }
 
 // Показ/скрытие меню с эмодзи
-const emojiToggleBtn = document.getElementById('emojiToggleBtn');
-const emojiMenu = document.getElementById('emojiMenu');
-const textarea = document.getElementById('editor');
+var emojiToggleBtn = document.getElementById('emojiToggleBtn');
+var emojiMenu = document.getElementById('emojiMenu');
+var textarea = document.getElementById('editor');
 
 emojiToggleBtn.addEventListener('mouseenter', () => {
     emojiMenu.classList.remove('hidden');
@@ -187,11 +190,80 @@ emojiMenu.addEventListener('click', (e) => {
 });
 
 function insertAtCursor(textarea, text) {
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const before = textarea.value.substring(0, start);
-    const after = textarea.value.substring(end, textarea.value.length);
+    var start = textarea.selectionStart;
+    var end = textarea.selectionEnd;
+    var before = textarea.value.substring(0, start);
+    var after = textarea.value.substring(end, textarea.value.length);
     textarea.value = before + text + after;
     textarea.selectionStart = textarea.selectionEnd = start + text.length;
     textarea.focus();
+}
+
+async function fetchLastMessages(chatId, botID) {
+    var url = `https://bot.fhnb.ru/feedback/universal/log.json` + "?rand=" + Math.floor(Math.random() * Date.now());
+    var chatId = botChatsList.value;
+    try {
+        var response = await fetch(url);
+        //await console.log(response.json());
+        var data = await response.json(); // '[' + response.text() + ']'
+
+        if (data) {
+            var messages = data
+                .filter(update => update.message && update.message.chat.id == chatId)
+                .map(update => update.message)
+                .slice(-10);
+            console.log(data);
+            displayMessages(messages, botID);
+        } else {
+            console.error('Failed to fetch messages:', data);
+        }
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+    }
+}
+
+function displayMessages(messages, botID) {
+    var chatLog = document.getElementById('chatLog');
+    chatLog.innerHTML = ''; // Clear existing messages
+
+    messages.forEach(message => {
+        printLogMessage(message);
+    });
+
+    chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the bottom of the chat log
+}
+
+function printLogMessage(message) {
+    var senderName = "user";
+    if (message.from.first_name || message.from.last_name) {
+        var senderName = message.from.first_name + " " + message.from.last_name;
+    }
+    if (message.from.username) {
+        var senderName = message.from.username;
+    }
+    if (message.sender_chat && message.sender_chat.title) {
+        var senderName = message.sender_chat.title;
+    }
+    //var senderName = message.sender_chat.title || message.from.first_name + " " + message.from.last_name || message.from.username;
+    var isBotMessage = message.from.id == botID;
+
+    var messageContainer = document.createElement('div');
+    messageContainer.className = `chat-log__message ${isBotMessage ? 'chat-log__message--bot' : 'chat-log__message--user'}`;
+
+    var senderElement = document.createElement('div');
+    senderElement.className = 'chat-log__sender';
+    senderElement.textContent = senderName;
+
+    var textElement = document.createElement('div');
+    textElement.textContent = message.text || '[Non-text message]';
+
+    messageContainer.appendChild(senderElement);
+    messageContainer.appendChild(textElement);
+
+    chatLog.appendChild(messageContainer);
+}
+
+function updateLog() {
+    var chatId = botChatsList.value;
+    fetchLastMessages(chatId, botID);
 }

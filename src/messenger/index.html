@@ -18,16 +18,19 @@
 </head>
 
 <body>
-    <header class="flex justify-between items-center p-4 bg-gray-800">
-        <a href="https://dev.fhnb.ru" class="text-white text-xl">Home</a>
+    <header class="flex flex-wrap justify-between items-center p-4 bg-gray-800">
+        <div class="flex flex-wrap">
+            <a href="https://dev.fhnb.ru" class="btn px-4 py-2 mr-2 rounded text-white text-xl">Home</a>
+            <a onclick="updateLog()" href="#" class="btn px-4 py-2 mr-2 rounded text-white text-xl">Update Log</a>
+        </div>
         <h1 class="text-white text-2xl text-center">Chat Bot Messenger</h1>
-        <select id="botChatsList" class="btn editor__button rounded">
+        <select id="botChatsList" class="btn editor__button rounded" onchange="updateLog()">
             <!-- Options will be dynamically added by JavaScript -->
         </select>
     </header>
 
     <div class="container mx-auto mt-10 p-4">
-        <div id="chatLog" class="chat-log bg-gray-800 rounded shadow-lg mb-4 hidden">
+        <div id="chatLog" class="chat-log bg-gray-800 rounded shadow-lg mb-4">
             <!-- Messages will be inserted here -->
         </div>
         <div class="editor-container">
