@@ -1,21 +1,70 @@
-// Populate the dropdown menu with chat IDs
+// Функция для извлечения параметра из URL
+function getUrlParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+// Инициализация списка чатов
 var botChatsList = document.getElementById('botChatsList');
+var selectedChat = getUrlParameter('chat');
+
 for (var [chatName, chatId] of Object.entries(chatData)) {
     var option = document.createElement('option');
     option.value = chatId;
     option.textContent = chatName;
     botChatsList.appendChild(option);
+
+    // Если chatId совпадает с ?chat=, устанавливаем этот чат как выбранный
+    if (chatId === selectedChat) {
+        botChatsList.value = chatId;
+    }
 }
 
+// Если ?chat= указан и его нет в списке, добавляем его
+if (selectedChat && !Object.values(chatData).includes(selectedChat)) {
+    var option = document.createElement('option');
+    option.value = selectedChat;
+    option.textContent = 'Unknown Chat'; // Можно заменить на любое значение или попытаться получить имя чата
+    botChatsList.appendChild(option);
+    botChatsList.value = selectedChat;
+}
+
+// Обновляем чат и URL при смене выбора
 botChatsList.addEventListener('change', (event) => {
     var chatLog = document.getElementById('chatLog');
     chatLog.innerHTML = ''; // Clear existing messages
     updateLog();
+
+    // Обновление URL с выбранным chatId
+    const selectedValue = botChatsList.value;
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set('chat', selectedValue);
+    window.history.pushState({}, '', newUrl); // Обновление URL без перезагрузки страницы
 });
+
 
 updateLog();
 
-setInterval(updateLog, 60000);
+var updateIntervalTime = 30 * 1000; // Интервал обновления в миллисекундах
+var remainingTime = updateIntervalTime / 1000; // Оставшееся время в секундах
+
+var updateInterval = setInterval(updateLog, updateIntervalTime);
+
+function updateTimerDisplay() {
+    var updateTimer = document.getElementById('updateTimer');
+    updateTimer.innerHTML = `Refresh messages after: ${remainingTime}s. <a class="link" onclick="updateLog()">Update now.</a>`;
+
+    remainingTime--;
+
+    // Если время вышло, сбросить таймер
+    if (remainingTime < 1) {
+        remainingTime = updateIntervalTime / 1000;
+    }
+}
+
+// Запускаем таймер отсчета
+var updateDisplay = setInterval(updateTimerDisplay, 1000);
+
 
 var botQMList = document.getElementById('emojiMenu');
 for (var item of Object.values(quickMessages)) {
@@ -26,9 +75,9 @@ for (var item of Object.values(quickMessages)) {
 }
 
 // Получаем элементы модального окна и изображения
-var modal = document.querySelector('#imageModal');
-var modalImg = modal.querySelector('#fullImage');
-var span = modal.querySelector('.close');
+var imgModal = document.querySelector('#imageModal');
+var modalImg = imgModal.querySelector('#fullImage');
+var span = imgModal.querySelector('.imgClose');
 var chatLog = document.querySelector('#chatLog');
 
 // Добавление обработчика клика для всех миниатюр с классом 'chat-log__message--thumb'
@@ -39,7 +88,7 @@ chatLog.addEventListener('click', (event) => {
         // Здесь выполняется код, который должен выполняться при клике на картинку
         var clickedImage = event.target;
         // Отображение модального окна
-        modal.style.display = 'flex';
+        imgModal.style.display = 'flex';
         // Установка пути к изображению в полноразмерное окно
         modalImg.src = clickedImage.src;
     }
@@ -47,13 +96,13 @@ chatLog.addEventListener('click', (event) => {
 
 // Закрытие модального окна при клике на крестик
 span.onclick = function() {
-    modal.style.display = 'none';
+    imgModal.style.display = 'none';
 };
 
 // Закрытие модального окна при клике вне изображения
 window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = 'none';
+    if (event.target == imgModal) {
+        imgModal.style.display = 'none';
     }
 };
 
@@ -316,23 +365,10 @@ function printLogMessage(message) {
     messageContainer.className = `chat-log__message ${isBotMessage ? 'chat-log__message--bot' : 'chat-log__message--user'}`;
 
     var senderElement = document.createElement('div');
-    senderElement.className = 'chat-log__sender';
+    senderElement.className = 'chat-log__sender mb-2';
     senderElement.textContent = senderName;
 
     var innerMessageContainer = document.createElement('div');
-
-    // Отображение текстовых сообщений и вложений
-    if (message.text) {
-        const textElement = document.createElement('div');
-        textElement.className = 'text-message mt-2';
-        textElement.textContent = message.text;
-        innerMessageContainer.appendChild(textElement);
-    } else if (message.caption) {
-        const captionElement = document.createElement('div');
-        captionElement.className = 'caption-message mt-2';
-        captionElement.textContent = message.caption;
-        innerMessageContainer.appendChild(captionElement);
-    }
 
     // Проверка и отображение вложений с использованием универсальной функции
     handleAttachment('photo', message, innerMessageContainer, 'photo');
@@ -344,6 +380,19 @@ function printLogMessage(message) {
         handleAttachment('animation', message, innerMessageContainer, 'gif');
     } else if (message.document) {
         handleAttachment('document', message, innerMessageContainer, 'document');
+    }
+
+    // Отображение текстовых сообщений и вложений
+    if (message.text) {
+        const textElement = document.createElement('div');
+        textElement.className = 'text-message break-all mt-2';
+        textElement.textContent = message.text;
+        innerMessageContainer.appendChild(textElement);
+    } else if (message.caption) {
+        const captionElement = document.createElement('div');
+        captionElement.className = 'caption-message mt-2';
+        captionElement.textContent = message.caption;
+        innerMessageContainer.appendChild(captionElement);
     }
 
     messageContainer.appendChild(senderElement);
@@ -376,6 +425,7 @@ function printLogMessage(message) {
 function updateLog() {
     var chatId = botChatsList.value;
     fetchLastMessages(chatId, botID);
+    remainingTime = updateIntervalTime / 1000;
 }
 
 // Универсальная функция для отображения вложений
@@ -394,6 +444,11 @@ function handleAttachment(attachmentType, message, container, displayText) {
         file_id = attachment[attachment.length - 1].file_id; // Если массив (например, photo)
     } else if (attachment.thumbnail) {
         file_id = attachment.thumbnail.file_id; // Если объект с thumbnail (например, sticker)
+    } else if (attachment.thumb) {
+        file_id = attachment.thumb.file_id; // Если объект с thumb (например, sticker)
+    } else if (attachmentType == "animation" && !attachment.thumb && !attachment.thumbnail) {
+        attachmentDiv.textContent = `[${displayText}] (Doesn't have preview)`;
+        return;
     } else {
         attachmentDiv.textContent = `[${displayText}]`;
         return;
@@ -411,7 +466,7 @@ function handleAttachment(attachmentType, message, container, displayText) {
             });
         })
         .catch(error => {
-            attachmentDiv.textContent = `[${displayText}] (Не удалось загрузить)`;
+            attachmentDiv.textContent = `[${displayText}] (Can't load)`;
             console.error(error);
         });
 
@@ -461,11 +516,92 @@ async function insertImagePreview(file_id) {
         return `<img src="data:${mimeType};base64,${base64Data}" alt="Photo" class="w-full rounded chat-log__message--thumb"/>`;
     } catch (error) {
         console.error('Ошибка в insertImagePreview:', error);
-        return '[Photo] (Не удалось загрузить)';
+        return `[Photo] (Can't load)`;
     }
 }
 
 function scrollToBottom() {
     const chatLog = document.getElementById('chatLog');
     chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+// Получаем элементы
+var leaveModal = document.getElementById('leaveChatModal');
+var confirmButton = leaveModal.querySelector('#confirmButton');
+var cancelButton = leaveModal.querySelector('#cancelButton');
+var errorMessage = leaveModal.querySelector('#errorMessage');
+var confirmTextInput = leaveModal.querySelector('#confirmTextInput');
+
+// Функция открытия модального окна
+function openLeaveChatModal(chatLeaveId) {
+    leaveModal.classList.remove('hidden');
+    leaveModal.querySelector('#confirmTextInput').classList.remove('hidden');
+    leaveModal.querySelector('.modal__description').classList.remove('hidden');
+    leaveModal.querySelector('.modal__leave-chat-id').textContent = "Chat id: " + chatLeaveId;
+    confirmButton.onclick = function() {
+        handleLeaveChat(chatLeaveId);
+    };
+}
+
+// Функция закрытия модального окна
+function closeLeaveChatModal() {
+    leaveModal.classList.add('hidden');
+    confirmTextInput.value = ''; // Очистка поля ввода
+    errorMessage.classList.add('hidden'); // Скрываем сообщение об ошибке
+    confirmButton.classList.remove('hidden');
+    errorMessage.classList.add('hidden');
+    leaveModal.querySelector('.modal__description').classList.remove('hidden');
+    leaveModal.querySelector('#confirmTextInput').classList.remove('hidden');
+    errorMessage.textContent = ''; // Очистка текста ошибки
+}
+
+// Обработка нажатия кнопки Cancel
+cancelButton.onclick = function() {
+    closeLeaveChatModal();
+};
+
+// Функция обработки выхода из чата
+function handleLeaveChat(leaveChatId) {
+    var userInput = confirmTextInput.value; // .trim()
+
+    if (userInput !== 'Leave this chat') {
+        errorMessage.textContent = 'You entered the wrong phrase, try again.';
+        errorMessage.classList.remove('hidden');
+        return;
+    }
+
+    // Выполнение запроса на выход из чата
+    fetch(`${apiEndpoint}leaveChat?chat_id=${leaveChatId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.ok && data.result) {
+                document.querySelector('.modal__title').textContent = 'Bot successfully left this chat.';
+                confirmButton.classList.add('hidden'); // Скрываем кнопку Sure
+                errorMessage.classList.add('hidden'); // ошибку
+                leaveModal.querySelector('.modal__description').classList.add('hidden'); // подсказку
+                leaveModal.querySelector('#confirmTextInput').classList.add('hidden'); // текстовое поле
+            } else {
+                console.log(data);
+                errorMessage.textContent = 'Failed to leave the chat. Please try again.';
+                errorMessage.title = data.description + " (" + "Error code: " + data.error_code + ")";
+                errorMessage.classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            errorMessage.textContent = 'Request failed. Please check your connection.';
+            errorMessage.classList.remove('hidden');
+        });
+}
+
+function promptForChatIdAndLeave() {
+    // Открываем alert prompt и запрашиваем у пользователя ID чата
+    var chatToLeave = prompt("Please enter the chat ID you want to leave:");
+
+    // Проверяем, что пользователь не отменил prompt и что chatId не пустой
+    if (chatToLeave) {
+        // Вызываем функцию открытия модального окна с введенным ID чата
+        openLeaveChatModal(chatToLeave);
+    } else {
+        console.log("Chat ID input was canceled or empty.");
+    }
 }

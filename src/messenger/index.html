@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name='robots' content='noindex,follow' />
 
-    <title>Telegram Chat Bot Messenger</title>
+    <title>Chat As Bot</title>
 
     <link rel="stylesheet" type="text/css" href="https://dev.fhnb.ru/assets/view/tailwind.css/2.2.19/f/tailwind.min.css">
     <link rel="stylesheet" type="text/css" href="style.css">
@@ -18,14 +18,14 @@
 </head>
 
 <body>
-    <header class="flex flex-wrap justify-between items-center p-4 bg-gray-800 flex-col md:flex-row">
-        <h1 class="text-white text-2xl text-center">Chat Bot Messenger</h1>
+    <header class="flex flex-wrap justify-between items-center p-4 bg-gray-800 flex-col sm:flex-row">
+        <h1 class="text-white text-2xl text-center">Chat As Bot</h1>
         <select id="botChatsList" class="btn editor__button rounded my-2 md:my-0">
             <!-- Options will be dynamically added by JavaScript -->
         </select>
         <div class="flex flex-wrap">
-            <a href="https://dev.fhnb.ru" class="btn px-4 py-2 mr-2 rounded text-white text-xl">Home</a>
-            <a onclick="updateLog()" href="#" class="btn px-4 py-2 mr-2 rounded text-white text-xl">Update Log</a>
+            <a onclick="promptForChatIdAndLeave()" class="link flex-grow px-2 py-2 mr-2 rounded text-white text-xl">Leave chat</a>
+            <a href="https://dev.fhnb.ru" class="link flex-grow px-2 py-2 rounded text-white text-xl">Go Home</a>
         </div>
     </header>
 
@@ -39,27 +39,28 @@
                 <div id="emojiMenu" class="hidden absolute z-10 bg-gray-600 rounded-lg p-2 shadow-lg">
                     <!-- Quick Reactions will be inserted here -->
                 </div>
-                <div class="mb-4">
-                    <button class="btn editor__button mr-2 my-2" id="emojiToggleBtn">❤️</button>
-                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('b')">B</button>
-                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('i')">I</button>
-                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('u')">U</button>
-                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('s')">S</button>
-                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('span', `class='tg-spoiler'`)">Spoiler</button>
-                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('pre')">Pre</button>
-                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('code')">Code</button>
-                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('blockquote')">Quote</button>
-                    <button class="btn editor__button mr-2 my-2" onclick="insertTag('a', `href=''`)">Link</button>
+                <div class="mb-4 flex flex-wrap justify-between">
+                    <button class="btn flex-grow editor__button mr-2 my-2 font-bold" onclick="insertTag('b')" title="Bold text">B</button>
+                    <button class="btn flex-grow editor__button mr-2 my-2 italic" onclick="insertTag('i')" title="Italic text">I</button>
+                    <button class="btn flex-grow editor__button mr-2 my-2 underline" onclick="insertTag('u')" title="Underline text">U</button>
+                    <button class="btn flex-grow editor__button mr-2 my-2 line-through" onclick="insertTag('s')" title="Strike text">S</button>
+                    <button class="btn flex-grow editor__button mr-2 my-2" onclick="insertTag('span', `class='tg-spoiler'`)" title="Hide text with spoiler">Spoiler</button>
+                    <button class="btn flex-grow editor__button mr-2 my-2" onclick="insertTag('pre')" title="Multiline code">Pre</button>
+                    <button class="btn flex-grow editor__button mr-2 my-2" onclick="insertTag('code')" title="Line of code">Code</button>
+                    <button class="btn flex-grow editor__button mr-2 my-2" onclick="insertTag('blockquote')" title="Quote text">Quote</button>
+                    <button class="btn flex-grow editor__button mr-2 my-2" onclick="insertTag('a', `href=''`)" title="Create link">Link</button>
                 </div>
                 <textarea id="editor" class="w-full h-40 p-2 bg-gray-700 text-white rounded" placeholder="Enter your message here..."></textarea>
-                <div class="mt-4 flex justify-between flex-wrap">
+                <div class="flex justify-between flex-wrap flex-col md:flex-row">
                     <div class="inline-flex my-2">
-                        <button class="btn editor__button px-4 py-2 mr-2 mb-4 rounded" onclick="sendImageB64()">Send Image File</button>
-                        <button class="btn editor__button px-4 py-2 mr-2 mb-4 rounded" onclick="sendImageURL()">Send Image URL</button>
+                        <button class="btn flex-grow editor__button px-4 py-2 mr-2 mb-1 md:mb-4 rounded inline-flex justify-center" onclick="sendImageB64()" title="Send image file"><span class="hidden md:block md:mr-1">Send</span>Image File</button>
+                        <button class="btn flex-grow editor__button px-4 py-2 mr-2 mb-1 md:mb-4 rounded inline-flex justify-center" onclick="sendImageURL()" title="Send image by link"><span class="hidden md:block md:mr-1">Send</span>Image URL</button>
+                        <button class="btn flex-grow editor__button px-4 py-2 mb-1 md:mb-4 rounded" id="emojiToggleBtn" title="Quick message and emoji">❤️</button>
                     </div>
-                    <button class="btn editor__button px-4 py-2 mr-2 mb-4 rounded" onclick="sendMessage()">Send Message</button>
+                    <button class="btn editor__button px-4 py-2 my-2 mb-2 md:mb-6 rounded" onclick="sendMessage()" title="Send Message">Send ></button>
                 </div>
-                <div id="responseContainer" class="response-container hidden">
+                <div id="updateTimer" class="mb-2"></div>
+                <div id="responseContainer" class="hidden">
                     <textarea id="responseField" class="w-full h-40 p-2 bg-gray-700 text-white rounded" readonly></textarea>
                     <button id="deleteMessageBtn" class="btn editor__button mt-4 px-4 py-2 rounded" onclick="deleteMessage()">Delete Message</button>
                 </div>
@@ -70,10 +71,29 @@
     <input type="file" id="imageFileInput" accept="image/*" class="hidden" onchange="handleImageFile()">
 
     <!-- Modal window to show image -->
-    <div id="imageModal" class="modal">
-        <span class="close">&times;</span>
-        <img class="modal-content" id="fullImage">
+    <div id="imageModal" class="imgModal">
+        <span class="imgClose">&times;</span>
+        <img class="imgModal-content" id="fullImage">
     </div>
+
+    <!-- Modal Background -->
+    <div id="leaveChatModal" class="modal hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+        <!-- Modal Content -->
+        <div class="modal__content bg-gray-800 p-6 rounded-lg w-96">
+            <h2 class="modal__title text-white text-xl font-semibold mb-4">Are you sure want to leave chat?</h2>
+            <p class="modal__leave-chat-id text-gray-400 mb-4"></p>
+            <p class="modal__description text-gray-400 mb-4">Enter 'Leave this chat' below:</p>
+
+            <input type="text" id="confirmTextInput" class="modal__input bg-gray-700 text-white w-full p-2 rounded mb-4" placeholder="Type here...">
+            <p id="errorMessage" class="text-red-500 text-sm hidden mb-4"></p>
+
+            <div class="modal__buttons flex justify-end">
+                <button id="cancelButton" class="modal__button-cancel bg-gray-600 text-white px-4 py-2 rounded mr-2">Close</button>
+                <button id="confirmButton" class="modal__button-confirm bg-red-600 text-white px-4 py-2 rounded">Leave</button>
+            </div>
+        </div>
+    </div>
+
 
     <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript" src="script.js"></script>
