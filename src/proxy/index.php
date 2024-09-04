@@ -4,6 +4,10 @@
 // Отладка
 define('DEBUG', true);
 
+error_reporting(E_ALL & ~E_NOTICE);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/php-error.txt');
+
 require_once('apiKey.php');
 
 // Базовый URL API Telegram
@@ -40,7 +44,7 @@ function forwardRequest($requestUri, $requestMethod, $postData = null) {
     return $response;
 }
 
-function setJsonLog($data) {
+/*function setJsonLog($data) {
 
     // Имя файла для логов
     $logFile = CFG_JSON_LOGS;
@@ -75,7 +79,81 @@ function setJsonLog($data) {
 
     // Записываем обновленные логи обратно в файл
     file_put_contents($logFile, $newLogs);
+}*/
+
+function setJsonLog($data) {
+    // Имя файла для логов
+    $logFile = CFG_JSON_LOGS;
+    
+    //$data = file_get_contents($data);
+
+    // Открываем файл для чтения и записи
+    $fileHandle = fopen($logFile, 'c+'); // 'c+' открывает файл для чтения и записи, создавая его, если он не существует
+
+    if ($fileHandle) {
+        // Блокируем файл
+        if (flock($fileHandle, LOCK_EX)) {
+            // Читаем текущее содержимое файла
+            $currentLogs = stream_get_contents($fileHandle);
+
+            // Если файл не пустой, декодируем данные из JSON в массив
+            $logs = [];
+            if (!empty($currentLogs)) {
+                $logs = json_decode($currentLogs, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    // Если ошибка в декодировании JSON, инициализируем пустой массив
+                    if(DEBUG) file_put_contents('proxy_debug.log', "Temp log: " . $currentLogs . "\n", FILE_APPEND);
+                    throw new Exception('Файл логов поврежден:' . $currentLogs);
+                    $logs = [];
+                }
+            }
+
+            // Если количество логов превышает 100, удаляем старые
+            if (count($logs) > 120) {
+                $logs = array_slice($logs, 40);
+            }
+
+            $tempLog = json_decode($data, true);
+
+            // Проверяем наличие сообщения или результата
+            $resultExists = isset($tempLog['result']);
+            $okExists = isset($tempLog['ok']);
+
+            // Проверяем, что тип чата не является приватным
+            $resultNotBool = !is_bool($tempLog['result']);
+
+            // Проверяем что это не запрос изображения
+            $resultNotImage = !isset($tempLog['result']['file_path']);
+
+            // Если условия выполняются, добавляем элемент в массив логов
+            if ($resultExists && $okExists && $resultNotBool && $resultNotImage) {
+                $logs[] = $tempLog;
+            }
+
+            // Кодируем обновленный массив логов обратно в JSON
+            $newLogs = json_encode($logs, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+            // Очищаем файл и перемещаем указатель в начало файла
+            ftruncate($fileHandle, 0);
+            rewind($fileHandle);
+
+            // Записываем обновленные логи обратно в файл
+            fwrite($fileHandle, $newLogs);
+
+            // Снимаем блокировку и закрываем файл
+            flock($fileHandle, LOCK_UN);
+        } else {
+            // Если не удалось установить блокировку
+            throw new Exception('Не удалось установить блокировку на файл.');
+        }
+
+        fclose($fileHandle);
+    } else {
+        // Если не удалось открыть файл
+        throw new Exception('Не удалось открыть файл для записи логов.');
+    }
 }
+
 
 // Обработка GET и POST запросов
 $requestUri = $_SERVER['REQUEST_URI'];
@@ -95,7 +173,7 @@ if (count($uriParts) > 1 && $uriParts[1] === 'file') {
     $file_path = implode('/', array_slice($uriParts, 2));
     $url = 'https://api.telegram.org/file/' . BOT_API_KEY . '/' . $file_path;
     // Отладка запроса
-    if(DEBUG) file_put_contents('proxy_debug.log', "Request URI: " . $url . "\n", FILE_APPEND);
+    //if(DEBUG) file_put_contents('proxy_debug.log', "Request URI: " . $url . "\n", FILE_APPEND);
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -146,14 +224,14 @@ if (count($uriParts) > 1 && $uriParts[0] === 'proxy' && $uriParts[1] !== 'file')
 
         $response = forwardRequest($fullUri . '?' . $queryString, 'POST', $postData);
     } else {
-        header("HTTP/1.1 405 Method Not Allowed");
+        if (!headers_sent()) header("HTTP/1.1 405 Method Not Allowed");
         $response = json_encode(['error' => 'Method Not Allowed']);
     }
 } else {
-    header("HTTP/1.1 404 Not Found");
+    if (!headers_sent()) header("HTTP/1.1 404 Not Found");
     $response = json_encode(['error' => 'Not Found']);
 }
 
 // Выводим ответ
-header('Content-Type: application/json');
+if (!headers_sent()) header('Content-Type: application/json');
 echo $response;

@@ -14,6 +14,9 @@ botChatsList.addEventListener('change', (event) => {
 });
 
 updateLog();
+
+setInterval(updateLog, 60000);
+
 var botQMList = document.getElementById('emojiMenu');
 for (var item of Object.values(quickMessages)) {
     var qmItem = document.createElement('span');
@@ -400,6 +403,9 @@ function handleAttachment(attachmentType, message, container, displayText) {
     insertImagePreview(file_id)
         .then(imgHtml => {
             attachmentDiv.innerHTML = imgHtml;
+            if (displayText == "sticker") {
+                attachmentDiv.parentElement.parentElement.classList.add('sticker');
+            }
             attachmentDiv.querySelector('img').addEventListener('load', () => {
                 scrollToBottom();
             });

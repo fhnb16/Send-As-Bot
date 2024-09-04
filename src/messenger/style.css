@@ -96,6 +96,10 @@ body {
     object-fit: cover;
 }
 
+.sticker {
+    background: transparent!important;
+}
+
 
 /* Основной контейнер */
 
@@ -140,10 +144,9 @@ body {
         max-width: 60%;
         /* Ограничение ширины блоков */
     }
-}
-
-.chat-log {
-    max-width: 40%;
+    .chat-log {
+        max-width: 40%;
+    }
 }
 
 body {
