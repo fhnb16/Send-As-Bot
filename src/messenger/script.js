@@ -318,7 +318,7 @@ function insertAtCursor(textarea, text) {
 }
 
 async function fetchLastMessages(chatId, botID) {
-    var url = apiHistoryRequest + "?rand=" + Math.floor(Math.random() * Date.now());
+    var url = apiHistoryRequestUrl + "?rand=" + Math.floor(Math.random() * Date.now());
     var chatId = botChatsList.value;
     try {
         var response = await fetch(url);
@@ -412,7 +412,20 @@ function printLogMessage(message) {
 
     messageContainer.appendChild(senderElement);
     messageContainer.appendChild(innerMessageContainer);
-
+    if (isBotMessage) {
+        const actionsGroup = document.createElement('div');
+        actionsGroup.className = 'actionsGroup';
+        const deleteAction = document.createElement('div');
+        deleteAction.className = 'link';
+        deleteAction.dataset.messageId = message.message_id;
+        deleteAction.textContent = "Delete message";
+        deleteAction.onclick = function(event) {
+            deleteMessage();
+            this.remove()
+        };
+        actionsGroup.appendChild(deleteAction);
+        messageContainer.appendChild(actionsGroup);
+    }
 
     messageContainer.dataset.messageId = message.message_id;
 
