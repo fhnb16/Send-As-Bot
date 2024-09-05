@@ -42,7 +42,6 @@ botChatsList.addEventListener('change', (event) => {
     window.history.pushState({}, '', newUrl); // Обновление URL без перезагрузки страницы
 });
 
-
 updateLog();
 
 var updateIntervalTime = 30 * 1000; // Интервал обновления в миллисекундах
@@ -52,7 +51,7 @@ var updateInterval = setInterval(updateLog, updateIntervalTime);
 
 function updateTimerDisplay() {
     var updateTimer = document.getElementById('updateTimer');
-    updateTimer.innerHTML = `Refresh messages after: ${remainingTime}s. <a class="link" onclick="updateLog()">Update now.</a>`;
+    updateTimer.innerHTML = `Refresh messages after: ${remainingTime}s. <a class="link ml-1" onclick="updateLog()">Update now.</a> <a class="link ml-auto" href="?exit=true">Exit</a>`;
 
     remainingTime--;
 
@@ -66,7 +65,7 @@ function updateTimerDisplay() {
 var updateDisplay = setInterval(updateTimerDisplay, 1000);
 
 
-const logDiv = document.getElementById('chatLog');
+const logDiv = document.querySelector('.chat-log');
 const editorDiv = document.querySelector('.editor-container');
 
 function showEditor() {
@@ -331,29 +330,17 @@ async function fetchLastMessages(chatId, botID) {
     }
 }
 
-/*function displayMessages(messages, botID) {
-    var chatLog = document.getElementById('chatLog');
-    chatLog.innerHTML = ''; // Clear existing messages
-
-    messages.forEach(message => {
-        printLogMessage(message);
-    });
-
-    scrollToBottom();
-}*/
-
 function displayMessages(messages, botID) {
-    var chatLog = document.getElementById('chatLog');
 
     messages.forEach(message => {
         // Проверяем, есть ли сообщение с таким ID уже в DOM
         if (!isMessageAlreadyInDOM(message.message_id)) {
             // Если нет, добавляем его в лог
             printLogMessage(message);
+
+            //scrollToBottom();
         }
     });
-
-    scrollToBottom();
 }
 
 function isMessageAlreadyInDOM(messageId) {
@@ -380,7 +367,7 @@ function printLogMessage(message) {
     var isBotMessage = message.from.id == botID;
 
     var messageContainer = document.createElement('div');
-    messageContainer.className = `chat-log__message ${isBotMessage ? 'chat-log__message--bot' : 'chat-log__message--user'}`;
+    messageContainer.className = `chat-log__message z-20 ${isBotMessage ? 'chat-log__message--bot' : 'chat-log__message--user'}`;
 
     var senderElement = document.createElement('div');
     senderElement.className = 'chat-log__sender mb-2';
@@ -441,10 +428,32 @@ function printLogMessage(message) {
 }
 
 function updateLog() {
+    var chatLog = document.getElementById('chatLog');
+    /*if (chatLog.querySelector("canvas") === null) {
+        var scrollBottomContainer = document.createElement('canvas');
+        scrollBottomContainer.className = 'tg-background';
+        chatLog.appendChild(scrollBottomContainer);
+    }*/
     var chatId = botChatsList.value;
     fetchLastMessages(chatId, botID);
     remainingTime = updateIntervalTime / 1000;
 }
+
+chatLog.addEventListener('scroll', () => {
+    var chatLog = document.getElementById('chatLog');
+    var scrollBottomBtn = chatLog.querySelector(".scrollBottom");
+    if (scrollBottomBtn !== null) {
+        var scrollTop = chatLog.scrollTop;
+        var clientHeight = chatLog.clientHeight;
+        var scrollHeight = chatLog.scrollHeight;
+
+        // Рассчитываем процент прокрутки от нижней точки
+        var scrollPercent = (scrollHeight - scrollTop - clientHeight) / scrollHeight;
+
+        // Меняем прозрачность блока в зависимости от прокрутки
+        scrollBottomBtn.style.opacity = scrollPercent;
+    }
+});
 
 // Универсальная функция для отображения вложений
 function handleAttachment(attachmentType, message, container, displayText) {
@@ -539,7 +548,9 @@ async function insertImagePreview(file_id) {
 }
 
 function scrollToBottom() {
-    const chatLog = document.getElementById('chatLog');
+    const chatLog = document.querySelector('.chat-log');
+    const chatLogScrollable = document.querySelector('#chatLog');
+    chatLog.querySelector('.tg-background').style.height = (chatLogScrollable.scrollHeight + 80) + "px";
     chatLog.scrollTop = chatLog.scrollHeight;
 }
 
@@ -621,5 +632,23 @@ function promptForChatIdAndLeave() {
         openLeaveChatModal(chatToLeave);
     } else {
         console.log("Chat ID input was canceled or empty.");
+    }
+}
+
+function clearCacheAndReload() {
+    if ('caches' in window) {
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    return caches.delete(cacheName);
+                })
+            );
+        }).then(() => {
+            // Перезагружаем страницу после очистки кеша
+            window.location.reload(true);
+        });
+    } else {
+        // Если Cache API не поддерживается
+        window.location.reload(true);
     }
 }
