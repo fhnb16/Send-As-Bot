@@ -32,6 +32,7 @@ if (selectedChat && !Object.values(chatData).includes(selectedChat)) {
 // Обновляем чат и URL при смене выбора
 botChatsList.addEventListener('change', (event) => {
     var chatLog = document.getElementById('chatLog');
+    chatLog.parentElement.querySelector('.tg-background').style.height = 0 + "px";
     chatLog.innerHTML = ''; // Clear existing messages
     updateLog();
 
@@ -42,6 +43,8 @@ botChatsList.addEventListener('change', (event) => {
     window.history.pushState({}, '', newUrl); // Обновление URL без перезагрузки страницы
 });
 
+document.getElementById('chatLog').parentElement.querySelector('.tg-background').style.height = 0 + "px";
+
 updateLog();
 
 var updateIntervalTime = 30 * 1000; // Интервал обновления в миллисекундах
@@ -51,7 +54,9 @@ var updateInterval = setInterval(updateLog, updateIntervalTime);
 
 function updateTimerDisplay() {
     var updateTimer = document.getElementById('updateTimer');
-    updateTimer.innerHTML = `Refresh messages after: ${remainingTime}s. <a class="link ml-1" onclick="updateLog()">Update now.</a> <a class="link ml-auto" href="?exit=true">Exit</a>`;
+    var updateCounter = document.getElementById('bottomNav').querySelector('.updateCounter');
+    updateCounter.textContent = "[" + remainingTime + "]";
+    updateTimer.innerHTML = `Refresh messages after: ${remainingTime}s. <a class="link ml-1" onclick="updateLog()">Update.</a> <a class="link ml-auto" href="?exit=true">Log Out</a>`;
 
     remainingTime--;
 
@@ -257,22 +262,27 @@ function urltoFile(base64, filename) {
 
 // Prompt user for URL and send as image
 function sendImageURL() {
-    var imageUrl = prompt("Enter the image URL:");
-    if (imageUrl) {
-        var caption = document.getElementById('editor').value;
-        var chatId = botChatsList.value;
+    document.body.classList.add('blur');
+    setTimeout(() => {
+        var imageUrl = prompt("Enter the image URL:");
+        document.body.classList.remove('blur');
+        if (imageUrl) {
+            var caption = document.getElementById('editor').value;
+            var chatId = botChatsList.value;
 
-        var url = `${apiEndpoint}sendPhoto?chat_id=${chatId}&photo=${encodeURIComponent(imageUrl)}&caption=${encodeURIComponent(caption)}`;
+            var url = `${apiEndpoint}sendPhoto?chat_id=${chatId}&photo=${encodeURIComponent(imageUrl)}&caption=${encodeURIComponent(caption)}`;
 
-        fetch(url, {
-                method: 'GET',
-            })
-            .then(response => response.json())
-            .then(data => {
-                displayResponse(data);
-            })
-            .catch(error => console.error('Error sending image:', error));
-    }
+            fetch(url, {
+                    method: 'GET',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    displayResponse(data);
+                })
+                .catch(error => console.error('Error sending image:', error));
+        }
+    }, 300);
+
 }
 
 // Показ/скрытие меню с эмодзи
@@ -624,15 +634,19 @@ function handleLeaveChat(leaveChatId) {
 
 function promptForChatIdAndLeave() {
     // Открываем alert prompt и запрашиваем у пользователя ID чата
-    var chatToLeave = prompt("Please enter the chat ID you want to leave:");
+    document.body.classList.add('blur');
+    setTimeout(() => {
+        var chatToLeave = prompt("Please enter the chat ID you want to leave:");
+        document.body.classList.remove('blur');
 
-    // Проверяем, что пользователь не отменил prompt и что chatId не пустой
-    if (chatToLeave) {
-        // Вызываем функцию открытия модального окна с введенным ID чата
-        openLeaveChatModal(chatToLeave);
-    } else {
-        console.log("Chat ID input was canceled or empty.");
-    }
+        // Проверяем, что пользователь не отменил prompt и что chatId не пустой
+        if (chatToLeave) {
+            // Вызываем функцию открытия модального окна с введенным ID чата
+            openLeaveChatModal(chatToLeave);
+        } else {
+            console.log("Chat ID input was canceled or empty.");
+        }
+    }, 300);
 }
 
 function clearCacheAndReload() {

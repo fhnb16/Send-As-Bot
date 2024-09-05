@@ -78,8 +78,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             <div class="mainSection">
                 <div class="chat-log rounded shadow-lg relative bg-gray-900 selected">
                     <canvas class="tg-background z-0"></canvas>
-                    <div class="scrollToBottomBtn z-40" onclick="scrollToBottom()">Scroll To Bottom</div>
-                    <div id="chatLog" class="relative z-10">
+                    <!-- <div class="scrollToBottomBtn z-40" onclick="scrollToBottom()">Scroll To Bottom</div> -->
+                    <div id="chatLog" class="relative z-10 w-full">
                         <!--  mb-4 md:mb-0 -->
                         <!-- Messages will be inserted here -->
                     </div>
@@ -122,7 +122,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         <nav id="bottomNav" class="bottomMobileNav">
             <ul>
                 <li class="flex-grow logSelector selected" onclick="showLog()">Log</li>
-                <li class="flex-grow" onclick="updateLog()">Update</li>
+                <li class="flex-grow inline-flex justify-center" onclick="updateLog()">Update<span class="updateCounter ml-1"></span></li>
                 <li class="flex-grow editorSelector" onclick="showEditor()">Editor</li>
             </ul>
         </nav>

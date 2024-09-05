@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <label for="password" class="block text-sm">Password:</label>
                 <input type="password" id="password" name="password" class="w-full p-2 rounded-md border border-gray-700 bg-gray-900 text-gray-100" required>
             </div>
-            <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500">Login</button>
+            <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500">Log In</button>
         </form>
         <?php if (isset($loginError)) { ?>
             <p class="mt-4 text-red-500"><?php echo $loginError; ?></p>
