@@ -31,11 +31,13 @@
 
     <div class="container mx-auto mt-10 p-4">
         <!--  lg:flex md:flex-wrap lg:justify-between items-center flex flex-wrap flex-row justify-center -->
-        <div class="mainSection mb-4">
-            <div id="chatLog" class="chat-log bg-gray-800 rounded shadow-lg mb-4 md:mb-0">
+        <div class="mainSection">
+            <div id="chatLog" class="chat-log bg-gray-800 rounded shadow-lg">
+                <!--  mb-4 md:mb-0 -->
                 <!-- Messages will be inserted here -->
             </div>
-            <div class="editor-container mb-4 md:mb-0">
+            <div class="editor-container selected">
+                <!--  mb-4 md:mb-0 -->
                 <div id="emojiMenu" class="hidden absolute z-10 bg-gray-600 rounded-lg p-2 shadow-lg">
                     <!-- Quick Reactions will be inserted here -->
                 </div>
@@ -67,6 +69,13 @@
             </div>
         </div>
     </div>
+
+    <nav id="bottomNav" class="bottomMobileNav">
+        <ul>
+            <li class="flex-grow editorSelector selected" onclick="showEditor()">Editor</li>
+            <li class="flex-grow logSelector" onclick="showLog()">Log</li>
+        </ul>
+    </nav>
 
     <input type="file" id="imageFileInput" accept="image/*" class="hidden" onchange="handleImageFile()">
 

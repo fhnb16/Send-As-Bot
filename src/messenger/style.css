@@ -130,6 +130,74 @@ body {
     background: transparent!important;
 }
 
+#bottomNav,
+#bottomNav * {
+    transition: all 0.3s ease;
+}
+
+#bottomNav {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 0;
+    background-color: #2d3748;
+    border-top: 2px solid #1a202c;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+#bottomNav .editorSelector.selected,
+#bottomNav .logSelector.selected {
+    border: 1px dashed #4a5568;
+}
+
+#bottomNav>ul {
+    display: flex;
+    justify-content: space-around;
+}
+
+#bottomNav>ul>li {
+    margin: 4px;
+    padding: 6px 18px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    /* ниже md-разрешения */
+    .editor-container {
+        display: none;
+    }
+    .editor-container.selected {
+        display: block;
+    }
+    .chat-log {
+        display: none;
+    }
+    .chat-log.selected {
+        display: block;
+    }
+    .container {
+        margin-top: 0;
+    }
+    .mainSection {
+        padding: 0;
+        max-height: 65vh;
+    }
+    #bottomNav {
+        max-height: fit-content;
+        display: block;
+    }
+    header {
+        flex-direction: row;
+        flex-wrap: nowrap;
+    }
+}
+
 
 /* Основной контейнер */
 

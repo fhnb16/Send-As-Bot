@@ -66,6 +66,23 @@ function updateTimerDisplay() {
 var updateDisplay = setInterval(updateTimerDisplay, 1000);
 
 
+const logDiv = document.getElementById('chatLog');
+const editorDiv = document.querySelector('.editor-container');
+
+function showEditor() {
+    document.querySelector('.logSelector').classList.remove('selected');
+    document.querySelector('.editorSelector').classList.add('selected');
+    logDiv.classList.remove('selected');
+    editorDiv.classList.add('selected');
+};
+
+function showLog() {
+    document.querySelector('.logSelector').classList.add('selected');
+    document.querySelector('.editorSelector').classList.remove('selected');
+    logDiv.classList.add('selected');
+    editorDiv.classList.remove('selected');
+};
+
 var botQMList = document.getElementById('emojiMenu');
 for (var item of Object.values(quickMessages)) {
     var qmItem = document.createElement('span');
@@ -95,6 +112,7 @@ chatLog.addEventListener('click', (event) => {
 });
 
 // Закрытие модального окна при клике на крестик
+
 span.onclick = function() {
     imgModal.style.display = 'none';
 };
