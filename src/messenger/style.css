@@ -5,6 +5,10 @@
         color: #cbd5e0;
     }
     
+    svg {
+        pointer-events: none;
+    }
+    
     .editor-container {
         position: relative;
         background-color: #2d374864;
@@ -70,15 +74,6 @@
     
     #chatLog {
         min-height: 512px;
-    }
-    
-    #chatLog:empty {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        padding: 16px;
-        text-align: center;
-        content: 'No messages';
     }
     
     .chat-log__message {
@@ -371,6 +366,7 @@
         .chat-log {
             display: none;
             max-height: unset;
+            width: 100%;
         }
         .chat-log.selected {
             display: block;
@@ -462,4 +458,13 @@
     
     body.blur {
         filter: var(--tw-blur);
+    }
+    
+    #chatLog:empty::before {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        padding: 16px;
+        text-align: center;
+        content: 'No messages';
     }

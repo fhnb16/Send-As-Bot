@@ -348,7 +348,7 @@ function displayMessages(messages, botID) {
             // Если нет, добавляем его в лог
             printLogMessage(message);
 
-            //scrollToBottom();
+            scrollToBottom();
         }
     });
 }
@@ -418,7 +418,8 @@ function printLogMessage(message) {
         const deleteAction = document.createElement('div');
         deleteAction.className = 'link';
         deleteAction.dataset.messageId = message.message_id;
-        deleteAction.textContent = "Delete message";
+        deleteAction.title = "Delete message";
+        deleteAction.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="mt-1 ml-auto" height="20" viewBox="0 0 576 512"><path fill="white" d="M576 128c0-35.3-28.7-64-64-64L205.3 64c-17 0-33.3 6.7-45.3 18.7L9.4 233.4c-6 6-9.4 14.1-9.4 22.6s3.4 16.6 9.4 22.6L160 429.3c12 12 28.3 18.7 45.3 18.7L512 448c35.3 0 64-28.7 64-64l0-256zM271 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/></svg>`;
         deleteAction.onclick = function(event) {
             deleteMessage();
             this.remove()
@@ -430,6 +431,8 @@ function printLogMessage(message) {
     messageContainer.dataset.messageId = message.message_id;
 
     chatLog.appendChild(messageContainer);
+
+    scrollToBottom();
 
     // Найдем все изображения в новом сообщении
     const images = chatLog.querySelectorAll('img');
@@ -478,6 +481,17 @@ chatLog.addEventListener('scroll', () => {
     }
 });
 
+function generateRandomString(length, chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') {
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random()  *
+            chars.length);
+        result += chars.charAt(randomIndex);
+    }
+    return result; 
+
+}
+
 // Универсальная функция для отображения вложений
 function handleAttachment(attachmentType, message, container, displayText) {
     const attachment = message[attachmentType];
@@ -489,6 +503,73 @@ function handleAttachment(attachmentType, message, container, displayText) {
     attachmentDiv.innerHTML = `<i>Loading ${displayText} preview...</i>`;
     container.appendChild(attachmentDiv);
 
+    function addDownloadContainer() {
+        var isBotMessage = message.from.id == botID;
+        if (!isBotMessage) {
+            const actionsGroup = document.createElement('div');
+            actionsGroup.className = 'actionsGroup';
+            const downloadAction = document.createElement('div');
+            downloadAction.className = 'link';
+
+            var fileName;
+
+            if (Array.isArray(attachment)) {
+                // Если attachment является массивом
+                var lastAttachment = attachment[attachment.length - 1];
+                if (attachmentType == "photo") {
+                    // Если тип вложения - фото, добавляем расширение .jpg
+                    fileName = lastAttachment.file_unique_id + "_" + message.message_id + ".jpg";
+                } else {
+                    // Если тип вложения не фото, добавляем расширение .unknown
+                    fileName = lastAttachment.file_unique_id + "_" + message.message_id + ".unknown";
+                }
+            } else if (attachmentType == "sticker") {
+                // Если тип вложения - стикер
+                if (attachment.is_animated) {
+                    // Если стикер векторный, добавляем расширение .tgs
+                    fileName = attachment.file_unique_id + "_" + message.message_id + ".tgs";
+                } else if (attachment.is_video) {
+                    // Если стикер видео, добавляем расширение .webm
+                    fileName = attachment.file_unique_id + "_" + message.message_id + ".webm";
+                } else {
+                    // Если стикер картинка, добавляем расширение .webp
+                    fileName = attachment.file_unique_id + "_" + message.message_id + ".webp";
+                }
+            } else if (attachmentType == "voice") {
+                // Если тип вложения - аудиосообщение, добавляем расширение .ogg
+                fileName = attachment.file_unique_id + "_" + message.message_id + ".ogg";
+            } else if (attachmentType == "voice") {
+                // Если тип вложения - аудиосообщение, добавляем расширение .ogg
+                fileName = attachment.file_unique_id + "_" + message.message_id + ".ogg";
+            } else if (attachmentType == "video") {
+                // Если тип вложения - видео, добавляем расширение .mp4
+                fileName = attachment.file_unique_id + "_" + message.message_id + ".mp4";
+            } else {
+                // Если attachment не является массивом или стикером
+                if (attachment.file_name) {
+                    // Если attachment не является массивом или стикером, просто используем имя файла
+                    fileName = attachment.file_name;
+                } else {
+                    // Если имя файла не указано - просто используем уникальный id
+                    fileName = attachment.file_unique_id + "_" + message.message_id + ".unknown";
+                }
+            }
+
+            var fileId = Array.isArray(attachment) ? attachment[attachment.length - 1].file_id : attachment.file_id;
+
+            //downloadAction.dataset.fileId = fileId;
+            //downloadAction.dataset.fileName = fileName;
+            downloadAction.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20" class="mt-1" viewBox="0 0 384 512"><path fill="white" d="M64 0C28.7 0 0 28.7 0 64L0 448c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-288-128 0c-17.7 0-32-14.3-32-32L224 0 64 0zM256 0l0 128 128 0L256 0zM216 232l0 102.1 31-31c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-72 72c-9.4 9.4-24.6 9.4-33.9 0l-72-72c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l31 31L168 232c0-13.3 10.7-24 24-24s24 10.7 24 24z"/></svg>`;
+            downloadAction.title = "Download file: " + fileName;
+            downloadAction.onclick = function(event) {
+                console.log(fileName + " : " + fileId);
+                downloadAttachment(fileId, fileName);
+            };
+            actionsGroup.appendChild(downloadAction);
+            container.appendChild(actionsGroup);
+        }
+    }
+
     let file_id;
     if (Array.isArray(attachment)) {
         file_id = attachment[attachment.length - 1].file_id; // Если массив (например, photo)
@@ -498,11 +579,15 @@ function handleAttachment(attachmentType, message, container, displayText) {
         file_id = attachment.thumb.file_id; // Если объект с thumb (например, sticker)
     } else if (attachmentType == "animation" && !attachment.thumb && !attachment.thumbnail) {
         attachmentDiv.textContent = `[${displayText}] (Doesn't have preview)`;
+        addDownloadContainer();
         return;
     } else {
         attachmentDiv.textContent = `[${displayText}]`;
+        addDownloadContainer();
         return;
     }
+
+    addDownloadContainer();
 
     // Вызов функции insertImagePreview и установка innerHTML
     insertImagePreview(file_id)
@@ -524,6 +609,52 @@ function handleAttachment(attachmentType, message, container, displayText) {
     scrollToBottom();
 }
 
+async function downloadAttachment(file_id, fileName) {
+    try {
+        // Первый запрос: получить file_path через getFile API
+        const getFileResponse = await fetch(`${apiEndpoint}getFile?file_id=${file_id}`);
+        const getFileData = await getFileResponse.json();
+
+        if (!getFileData.ok) {
+            throw new Error('Не удалось получить информацию о файле');
+        }
+
+        const file_path = getFileData.result.file_path;
+
+        // Второй запрос: получить файл через прокси
+        const fileResponse = await fetch(`${apiEndpoint}file/${file_path}`);
+        if (!fileResponse.ok) {
+            throw new Error('Не удалось загрузить файл');
+        }
+
+        const blob = await fileResponse.blob();
+
+        // скачиваем файл из blob
+
+        const blobUrl = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+
+        link.href = blobUrl;
+        link.download = fileName;
+
+        document.body.appendChild(link);
+
+        // воркэраунд для лисы
+        link.dispatchEvent(
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            })
+        );
+
+        return true;
+    } catch (error) {
+        console.error('Ошибка в insertImagePreview:', error);
+        return false;
+    }
+}
 
 async function insertImagePreview(file_id) {
     try {
@@ -574,7 +705,7 @@ function scrollToBottom() {
     const chatLog = document.querySelector('.chat-log');
     const chatLogScrollable = document.querySelector('#chatLog');
     chatLog.querySelector('.tg-background').style.height = (chatLogScrollable.scrollHeight + 80) + "px";
-    chatLog.scrollTop = chatLog.scrollHeight;
+    chatLog.scrollTop = chatLog.scrollHeight + 80;
 }
 
 // Получаем элементы
