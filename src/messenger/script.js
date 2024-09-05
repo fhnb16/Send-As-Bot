@@ -318,7 +318,7 @@ function insertAtCursor(textarea, text) {
 }
 
 async function fetchLastMessages(chatId, botID) {
-    var url = `https://bot.fhnb.ru/feedback/universal/log.json` + "?rand=" + Math.floor(Math.random() * Date.now());
+    var url = apiHistoryRequest + "?rand=" + Math.floor(Math.random() * Date.now());
     var chatId = botChatsList.value;
     try {
         var response = await fetch(url);
