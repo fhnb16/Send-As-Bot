@@ -31,11 +31,11 @@ if (selectedChat && !Object.values(chatData).includes(selectedChat)) {
 
 // Обновляем чат и URL при смене выбора
 botChatsList.addEventListener('change', (event) => {
+    showLog();
     var chatLog = document.getElementById('chatLog');
     chatLog.parentElement.querySelector('.tg-background').style.height = 0 + "px";
     chatLog.innerHTML = ''; // Clear existing messages
     updateLog();
-
     // Обновление URL с выбранным chatId
     const selectedValue = botChatsList.value;
     const newUrl = new URL(window.location);
@@ -56,7 +56,7 @@ function updateTimerDisplay() {
     var updateTimer = document.getElementById('updateTimer');
     var updateCounter = document.getElementById('bottomNav').querySelector('.updateCounter');
     updateCounter.textContent = "[" + remainingTime + "]";
-    updateTimer.innerHTML = `Refresh messages after: ${remainingTime}s. <a class="link ml-1" onclick="updateLog()">Update.</a> <a class="link ml-auto" href="?exit=true">Log Out</a>`;
+    updateTimer.innerHTML = `Refresh messages after: ${remainingTime}s. <a class="link ml-1" onclick="updateLog()">Update.</a> <a class="link ml-auto" onclick="openChatID()">Open chat by ID</a>`; //  <a class="link ml-auto" href="?exit=true">Log Out</a>
 
     remainingTime--;
 
@@ -64,6 +64,23 @@ function updateTimerDisplay() {
     if (remainingTime < 1) {
         remainingTime = updateIntervalTime / 1000;
     }
+}
+
+function openChatID() {
+    // Открываем alert prompt и запрашиваем у пользователя ID чата
+    document.body.classList.add('blur');
+    setTimeout(() => {
+        var chatToShow = prompt("Please enter the chat ID you want to view:");
+        document.body.classList.remove('blur');
+
+        // Проверяем, что пользователь не отменил prompt и что chatId не пустой
+        if (chatToShow) {
+            // Вызываем функцию открытия модального окна с введенным ID чата
+            window.location.href = "?chat=" + chatToShow;
+        } else {
+            console.log("Chat ID input was canceled or empty.");
+        }
+    }, 300);
 }
 
 // Запускаем таймер отсчета
@@ -184,12 +201,19 @@ function displayResponse(data) {
             deleteBtn.dataset.chatId = data.result.chat.id;
             deleteBtn.classList.remove('hidden');
             textarea.value = "";
+            if (data.ok == false) {
+                showEditor();
+            } else {
+                showLog();
+            }
             updateLog();
             printLogMessage(data.result);
         } else {
+            showEditor();
             deleteBtn.classList.add('hidden');
         }
     } else {
+        showEditor();
         deleteBtn.classList.add('hidden');
     }
 
@@ -388,6 +412,7 @@ function printLogMessage(message) {
     // Проверка и отображение вложений с использованием универсальной функции
     handleAttachment('photo', message, innerMessageContainer, 'photo');
     handleAttachment('video', message, innerMessageContainer, 'video');
+    handleAttachment('video_note', message, innerMessageContainer, 'video_note');
     handleAttachment('sticker', message, innerMessageContainer, 'sticker');
     handleAttachment('audio', message, innerMessageContainer, 'audio');
     handleAttachment('voice', message, innerMessageContainer, 'voice');
@@ -541,8 +566,8 @@ function handleAttachment(attachmentType, message, container, displayText) {
             } else if (attachmentType == "voice") {
                 // Если тип вложения - аудиосообщение, добавляем расширение .ogg
                 fileName = attachment.file_unique_id + "_" + message.message_id + ".ogg";
-            } else if (attachmentType == "video") {
-                // Если тип вложения - видео, добавляем расширение .mp4
+            } else if (attachmentType == "video" || attachmentType == "video_note") {
+                // Если тип вложения - видео или видео кружок, добавляем расширение .mp4
                 fileName = attachment.file_unique_id + "_" + message.message_id + ".mp4";
             } else {
                 // Если attachment не является массивом или стикером
@@ -757,6 +782,7 @@ function handleLeaveChat(leaveChatId) {
     fetch(`${apiEndpoint}leaveChat?chat_id=${leaveChatId}`)
         .then(response => response.json())
         .then(data => {
+            displayResponse(data);
             if (data.ok && data.result) {
                 document.querySelector('.modal__title').textContent = 'Bot successfully left this chat.';
                 confirmButton.classList.add('hidden'); // Скрываем кнопку Sure

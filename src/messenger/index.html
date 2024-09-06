@@ -68,8 +68,9 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             <!-- Options will be dynamically added by JavaScript -->
         </select>
             <div class="flex flex-wrap">
-                <a onclick="promptForChatIdAndLeave()" class="link flex-grow px-2 py-2 mr-2 rounded text-white text-xl inline-flex justify-center">Leave<span class="hidden md:block md:ml-1">chat</span></a>
-                <a href="https://dev.fhnb.ru" class="link flex-grow px-2 py-2 rounded text-white text-xl inline-flex justify-center"><span class="hidden md:block md:mr-1">Go</span>Home</a>
+                <a href="?exit=true" class="link flex-grow px-2 py-2 rounded text-white text-xl inline-flex justify-center">Log Out</a>
+                <a onclick="promptForChatIdAndLeave()" class="link flex-grow px-2 py-2 rounded text-white text-xl inline-flex justify-center">Leave<span class="hidden md:block md:ml-1">chat</span></a>
+                <!-- <a href="https://dev.fhnb.ru" class="link flex-grow px-2 py-2 rounded text-white text-xl inline-flex justify-center"><span class="hidden md:block md:mr-1">Go</span>Home</a> -->
             </div>
         </header>
 
@@ -117,7 +118,10 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                     <div id="updateTimer" class="mb-2 flex"></div>
                     <div id="responseContainer" class="hidden">
                         <textarea id="responseField" class="w-full h-40 p-2 bg-gray-700 text-white rounded" readonly></textarea>
-                        <button id="deleteMessageBtn" class="btn editor__button mt-4 px-4 py-2 rounded" onclick="deleteMessage()">Delete Message</button>
+                        <button id="deleteMessageBtn" class="btn editor__button mt-4 px-4 py-2 rounded inline-flex justify-center items-center" onclick="deleteMessage()">
+                            Delete Message
+                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-4" height="20" viewBox="0 0 576 512"><path fill="white" d="M576 128c0-35.3-28.7-64-64-64L205.3 64c-17 0-33.3 6.7-45.3 18.7L9.4 233.4c-6 6-9.4 14.1-9.4 22.6s3.4 16.6 9.4 22.6L160 429.3c12 12 28.3 18.7 45.3 18.7L512 448c35.3 0 64-28.7 64-64l0-256zM271 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/></svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -126,7 +130,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         <nav id="bottomNav" class="bottomMobileNav">
             <ul>
                 <li class="flex-grow logSelector selected" onclick="showLog()">Log</li>
-                <li class="flex-grow inline-flex justify-center" onclick="updateLog()">Update<span class="updateCounter ml-1"></span></li>
+                <li class="flex-grow inline-flex justify-center" onclick="showLog();updateLog()">Update<span class="updateCounter ml-1"></span></li>
                 <li class="flex-grow editorSelector" onclick="showEditor()">Editor</li>
             </ul>
         </nav>
