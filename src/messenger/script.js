@@ -351,7 +351,7 @@ async function fetchLastMessages(chatId, botID) {
 
         if (data) {
             //console.log(data);
-            var messages = data
+            var messages = Object.values(data)
                 .filter(update => (update.result && update.result.chat && update.result.chat.id == chatId) || (update.message && update.message.chat.id == chatId))
                 .map(update => update.result || update.message)
                 .slice(-50);
